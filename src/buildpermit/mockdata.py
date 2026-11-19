@@ -1,11 +1,21 @@
 
-"""Build deterministic source rows for the local fixture."""
+"""Build deterministic source rows for the local fixture.
+
+Both the construction unit (``contractor``) and the supervision unit
+(``supervisor``) are published in the same permit table.  They are generated
+from *different* name pools so a fixture can always prove the two were not
+interchanged.
+"""
 import hashlib
 from datetime import datetime, timedelta, timezone
 from .config import SPEC
 
 NAMES = ["Alpha Widget", "Beta Gadget", "Gamma Set", "Delta Unit"]
 STATUS = ["new", "active", "pending", "sold", "withdrawn"]
+CONTRACTORS = ["Alpha Construction", "Beta Builders", "Gamma Civil",
+               "Delta Engineering"]
+SUPERVISORS = ["Omicron Supervision", "Pi Consulting", "Rho Oversight",
+               "Sigma Control"]
 SOURCE_START = datetime(2030, 1, 1, tzinfo=timezone.utc)
 
 def _h(salt, i):
@@ -29,6 +39,10 @@ def build_rows():
                 d[c] = STATUS[(i - 1) % len(STATUS)]
             elif c == "ts":
                 d[c] = (SOURCE_START + timedelta(days=i % 5)).isoformat().replace("+00:00", "Z")
+            elif c == "contractor":
+                d[c] = CONTRACTORS[(i - 1) % len(CONTRACTORS)]
+            elif c == "supervisor":
+                d[c] = SUPERVISORS[(i - 1) % len(SUPERVISORS)]
             else:
                 d[c] = "%s_%d" % (c, _h(c, i) % 97)
         rows.append(d)
@@ -48,6 +62,10 @@ def extra_row(k):
             d[c] = _h("x", k)
         elif c == "status":
             d[c] = "active"
+        elif c == "contractor":
+            d[c] = CONTRACTORS[k % len(CONTRACTORS)]
+        elif c == "supervisor":
+            d[c] = SUPERVISORS[k % len(SUPERVISORS)]
         else:
             d[c] = "%s_new_%d" % (c, k)
     return d
